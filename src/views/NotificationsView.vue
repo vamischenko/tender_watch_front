@@ -90,7 +90,7 @@ async function applyFilter(field: string, value: string) {
         >
           <div class="flex items-start gap-3">
             <div
-              class="shrink-0 mt-0.5 w-2 h-2 rounded-full mt-1.5"
+              class="shrink-0 mt-1.5 w-2 h-2 rounded-full"
               :class="log.status === 'sent' ? 'bg-green-500' : 'bg-red-400'"
             />
 

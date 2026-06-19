@@ -1,19 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PaginationMeta } from '@/types'
 
-defineProps<{ meta: PaginationMeta }>()
+const props = defineProps<{ meta: PaginationMeta }>()
 const emit = defineEmits<{ change: [page: number] }>()
 
-function pages(meta: PaginationMeta): number[] {
-  const total = meta.total_pages
-  const cur = meta.page
-  const range: number[] = []
+const pageRange = computed(() => {
+  const { total_pages, page } = props.meta
   const delta = 2
-  for (let i = Math.max(1, cur - delta); i <= Math.min(total, cur + delta); i++) {
+  const range: number[] = []
+  for (let i = Math.max(1, page - delta); i <= Math.min(total_pages, page + delta); i++) {
     range.push(i)
   }
   return range
-}
+})
 </script>
 
 <template>
@@ -28,16 +28,16 @@ function pages(meta: PaginationMeta): number[] {
     </button>
 
     <button
-      v-if="pages(meta)[0] > 1"
+      v-if="pageRange[0] > 1"
       class="px-3 py-1.5 rounded-lg text-sm hover:bg-gray-100 text-gray-700"
       @click="emit('change', 1)"
     >
       1
     </button>
-    <span v-if="pages(meta)[0] > 2" class="text-gray-400 px-1">…</span>
+    <span v-if="pageRange[0] > 2" class="text-gray-400 px-1">…</span>
 
     <button
-      v-for="p in pages(meta)"
+      v-for="p in pageRange"
       :key="p"
       class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
       :class="p === meta.page ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100 text-gray-700'"
@@ -46,9 +46,9 @@ function pages(meta: PaginationMeta): number[] {
       {{ p }}
     </button>
 
-    <span v-if="pages(meta).at(-1)! < meta.total_pages - 1" class="text-gray-400 px-1">…</span>
+    <span v-if="pageRange.at(-1)! < meta.total_pages - 1" class="text-gray-400 px-1">…</span>
     <button
-      v-if="pages(meta).at(-1)! < meta.total_pages"
+      v-if="pageRange.at(-1)! < meta.total_pages"
       class="px-3 py-1.5 rounded-lg text-sm hover:bg-gray-100 text-gray-700"
       @click="emit('change', meta.total_pages)"
     >

@@ -31,6 +31,9 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (res) => res,
   (error) => {
+    // Отменённые запросы (AbortController) не показываем пользователю
+    if (axios.isCancel(error)) return Promise.reject(error)
+
     const status = error.response?.status
 
     if (status === 401) {

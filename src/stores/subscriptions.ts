@@ -42,8 +42,8 @@ export const useSubscriptionsStore = defineStore('subscriptions', () => {
   }
 
   async function remove(id: string) {
-    const removed = items.value.find((s) => s.id === id)
     const idx = items.value.findIndex((s) => s.id === id)
+    const removed = idx !== -1 ? items.value[idx] : undefined
     items.value = items.value.filter((s) => s.id !== id)
     try {
       await subscriptionsApi.remove(id)
@@ -69,7 +69,6 @@ export const useSubscriptionsStore = defineStore('subscriptions', () => {
   }
 
   async function fetchPreview(criteria: Partial<FilterCriteria>) {
-    // Отменяем предыдущий запрос
     previewAbortController?.abort()
     previewAbortController = new AbortController()
 
@@ -78,12 +77,14 @@ export const useSubscriptionsStore = defineStore('subscriptions', () => {
     try {
       const res = await subscriptionsApi.preview(criteria, previewAbortController.signal)
       preview.value = res.data
-    } catch (e) {
-      if (!axios.isCancel(e)) throw e
-      // Запрос был отменён — не сбрасываем isLoadingPreview, придёт новый
-      return
-    } finally {
       isLoadingPreview.value = false
+    } catch (e) {
+      if (axios.isCancel(e)) {
+        // Запрос отменён следующим вызовом — isLoadingPreview остаётся true
+        return
+      }
+      isLoadingPreview.value = false
+      throw e
     }
   }
 

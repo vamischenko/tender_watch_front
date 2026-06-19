@@ -41,8 +41,8 @@ onMounted(async () => {
       categoryIds.value = [...sub.criteria.category_ids]
       regions.value = [...sub.criteria.regions]
       keywords.value = [...sub.criteria.keywords]
-      minBudget.value = sub.criteria.min_budget ? String(sub.criteria.min_budget / 100) : ''
-      maxBudget.value = sub.criteria.max_budget ? String(sub.criteria.max_budget / 100) : ''
+      minBudget.value = sub.criteria.min_budget != null ? String(sub.criteria.min_budget / 100) : ''
+      maxBudget.value = sub.criteria.max_budget != null ? String(sub.criteria.max_budget / 100) : ''
       channels.value = [...sub.channels] as DeliveryChannel[]
     }
   }
@@ -52,14 +52,14 @@ const criteria = computed<Partial<FilterCriteria>>(() => ({
   category_ids: categoryIds.value,
   regions: regions.value,
   keywords: keywords.value,
-  min_budget: minBudget.value ? Number(minBudget.value) * 100 : null,
-  max_budget: maxBudget.value ? Number(maxBudget.value) * 100 : null,
+  min_budget: minBudget.value !== '' ? Number(minBudget.value) * 100 : null,
+  max_budget: maxBudget.value !== '' ? Number(maxBudget.value) * 100 : null,
 }))
 
 const debouncedCriteria = useDebounce(criteria, 500)
 
 watch(debouncedCriteria, (c) => {
-  const hasAny = (c.category_ids?.length || c.regions?.length || c.keywords?.length || c.min_budget || c.max_budget)
+  const hasAny = (c.category_ids?.length || c.regions?.length || c.keywords?.length || c.min_budget != null || c.max_budget != null)
   if (hasAny) store.fetchPreview(c)
 })
 
@@ -129,13 +129,7 @@ async function submit() {
 
     const payload = {
       name: autoName,
-      criteria: {
-        category_ids: categoryIds.value,
-        regions: regions.value,
-        keywords: keywords.value,
-        min_budget: minBudget.value ? Number(minBudget.value) * 100 : null,
-        max_budget: maxBudget.value ? Number(maxBudget.value) * 100 : null,
-      },
+      criteria: criteria.value as import('@/types').FilterCriteria,
       channels: channels.value,
     }
 

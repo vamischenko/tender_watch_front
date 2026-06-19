@@ -12,14 +12,14 @@ import { useUrlFilters } from '@/composables/useUrlFilters'
 const store = useTendersStore()
 const { readFiltersFromUrl, writeFiltersToUrl } = useUrlFilters()
 
-// Флаг, чтобы watch не запускал fetchList во время начальной установки фильтров из URL
+// Флаг: watch не должен дублировать fetchList во время начальной установки фильтров из URL
 const initializing = ref(true)
 
 onMounted(async () => {
-  await store.fetchCategories()
   const urlFilters = readFiltersFromUrl()
   store.filters = { ...store.filters, ...urlFilters }
-  await store.fetchList()
+  // Категории и первый список загружаем параллельно — они независимы
+  await Promise.all([store.fetchCategories(), store.fetchList()])
   initializing.value = false
 })
 
@@ -31,10 +31,6 @@ watch(
     store.fetchList()
   },
 )
-
-function handleFilterUpdate(filters: typeof store.filters) {
-  store.filters = filters
-}
 
 function handleRetry() {
   store.fetchList()
@@ -52,7 +48,7 @@ function handleResetFilters() {
         <TenderFilters
           :model-value="store.filters"
           :categories="store.categories"
-          @update:model-value="handleFilterUpdate"
+          @update:model-value="(f) => (store.filters = f)"
         />
       </aside>
 
@@ -94,7 +90,7 @@ function handleResetFilters() {
         <AppPagination
           v-if="store.pagination && store.pagination.total_pages > 1"
           :meta="store.pagination"
-          @change="(p) => { store.setPage(p); store.fetchList() }"
+          @change="store.setPage"
         />
       </div>
     </div>
@@ -107,7 +103,7 @@ function handleResetFilters() {
           <TenderFilters
             :model-value="store.filters"
             :categories="store.categories"
-            @update:model-value="handleFilterUpdate"
+            @update:model-value="(f) => (store.filters = f)"
           />
         </div>
       </details>
